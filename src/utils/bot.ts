@@ -112,7 +112,7 @@ const getHardMove = (gameState: GameState, moves: Move[], player: Player): Move 
 
 // --- LEVEL 4: IMPOSSIBLE (Minimax with Alpha-Beta) ---
 
-const MAX_DEPTH = 3; // Keep low for performance in JS
+const MAX_DEPTH = 9; // Ultra-deep search for impossible difficulty
 const INF = 100000;
 
 // Evaluation function for Minimax
@@ -125,7 +125,7 @@ const evaluateState = (gameState: GameState, player: Player): number => {
 
     let score = 0;
 
-    // Macro Board Evaluation
+    // Macro Board Evaluation - Heavily weight winning positions
     for (const line of WINNING_LINES) {
         let pCount = 0;
         let oCount = 0;
@@ -133,13 +133,15 @@ const evaluateState = (gameState: GameState, player: Player): number => {
             if (gameState.macroBoard[idx] === player) pCount++;
             else if (gameState.macroBoard[idx] === opponent) oCount++;
         }
-        if (pCount === 2 && oCount === 0) score += 100;
-        if (oCount === 2 && pCount === 0) score -= 100;
+        if (pCount === 2 && oCount === 0) score += 300; // Increased from 100
+        if (pCount === 1 && oCount === 0) score += 20;
+        if (oCount === 2 && pCount === 0) score -= 300; // Increased from 100
+        if (oCount === 1 && pCount === 0) score -= 20;
     }
 
     // Micro Board Evaluation (weight heavily towards center board)
     for (let b = 0; b < 9; b++) {
-        const boardWeight = b === 4 ? 2 : 1; 
+        const boardWeight = b === 4 ? 3 : (b % 2 === 0 ? 2 : 1); // Center=3, corners=2, edges=1 
         if (gameState.macroBoard[b] === null) {
             // Count pieces in this board
             let localScore = 0;
@@ -209,10 +211,15 @@ const minimax = (state: GameState, depth: number, alpha: number, beta: number, i
 
     if (isMaximizing) {
         let maxEval = -INF;
-        // Limit branching factor for free moves to avoid performance hit
-        const consideredMoves = moves.length > 10 ? moves.slice(0, 10) : moves; 
+        // Smart move ordering for better alpha-beta pruning
+        const sortedMoves = moves.length > 20 
+            ? moves.map(m => ({...m, score: evaluateMoveHard(state, m, player)}))
+                   .sort((a,b) => (b.score || 0) - (a.score || 0))
+                   .slice(0, 20)
+                   .map(({boardIndex, cellIndex}) => ({boardIndex, cellIndex}))
+            : moves;
         
-        for (const move of consideredMoves) {
+        for (const move of sortedMoves) {
             const nextState = simulateMove(state, move, player);
             const evalScore = minimax(nextState, depth - 1, alpha, beta, false, player);
             maxEval = Math.max(maxEval, evalScore);
@@ -223,18 +230,13 @@ const minimax = (state: GameState, depth: number, alpha: number, beta: number, i
     } else {
         let minEval = INF;
         const opponent = player === 'X' ? 'O' : 'X';
-        const consideredMoves = moves.length > 10 ? moves.slice(0, 10) : moves;
-
-        for (const move of consideredMoves) {
-            const nextState = simulateMove(state, move, opponent);
-            const evalScore = minimax(nextState, depth - 1, alpha, beta, true, player);
-            minEval = Math.min(minEval, evalScore);
-            beta = Math.min(beta, evalScore);
-            if (beta <= alpha) break;
-        }
-        return minEval;
-    }
-};
+        // Smart move ordering for better alpha-beta pruning
+        const sortedMoves = moves.length > 20 
+            ? moves.map(m => ({...m, score: evaluateMoveHard(state, m, opponent)}))
+                   .sort((a,b) => (b.score || 0) - (a.score || 0))
+                   .slice(0, 20)
+                   .map(({boardIndex, cellIndex}) => ({boardIndex, cellIndex}))
+            : moves;
 
 const getImpossibleMove = (gameState: GameState, moves: Move[], player: Player): Move => {
     // If first move, center is best.
@@ -247,11 +249,29 @@ const getImpossibleMove = (gameState: GameState, moves: Move[], player: Player):
     // Sort moves by heuristic first to improve pruning
     const sortedMoves = moves.map(m => ({...m, score: evaluateMoveHard(gameState, m, player)})).sort((a,b) => b.score - a.score);
 
-    // If too many moves (free move stage), cut down the search space
-    const searchMoves = sortedMoves.length > 15 ? sortedMoves.slice(0, 15) : sortedMoves;
+    // Search more moves for truly impossible play - explore more of the game tree
+    const searchMoves = sortedMoves.length > 35 ? sortedMoves.slice(0, 35) : sortedMoves;
 
     for (const move of searchMoves) {
         const simState = simulateMove(gameState, move, player);
+        // If immediate win, take it (but keep searching to find the best immediate win)
+        if (simState.winner === player) {
+            bestMove = move;
+            bestScore = INF;
+            continue;
+        }
+
+        // Skip if already found a winning move
+        if (bestScore === INF) continue;
+
+        const score = minimax(simState, MAX_DEPTH - 1, -INF, INF, false, player);
+        if (score > bestScore) {
+            bestScore = score;
+            bestMove = move;
+        }
+    }
+    return bestMove;
+};      const simState = simulateMove(gameState, move, player);
         // If immediate win, take it
         if (simState.winner === player) return move;
 

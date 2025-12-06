@@ -53,7 +53,7 @@ const StartScreen: React.FC<StartScreenProps> = ({ onStart }) => {
 
           <div className="space-y-3">
              <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">Play vs Bot</p>
-             {(['EASY', 'MEDIUM', 'HARD', 'IMPOSSIBLE'] as Difficulty[]).map((diff) => (
+             {(['EASY', 'MEDIUM', 'HARD', 'VERY HARD'] as any[]).map((diff) => {
                <button
                  key={diff}
                  onClick={() => onStart('BOT', diff)}
@@ -62,11 +62,11 @@ const StartScreen: React.FC<StartScreenProps> = ({ onStart }) => {
                    ${diff === 'EASY' ? 'bg-zinc-900 text-emerald-400 hover:bg-emerald-950/30 hover:border-emerald-500/30' : ''}
                    ${diff === 'MEDIUM' ? 'bg-zinc-900 text-yellow-400 hover:bg-yellow-950/30 hover:border-yellow-500/30' : ''}
                    ${diff === 'HARD' ? 'bg-zinc-900 text-orange-400 hover:bg-orange-950/30 hover:border-orange-500/30' : ''}
-                   ${diff === 'IMPOSSIBLE' ? 'bg-zinc-950 text-red-500 border-red-900/20 hover:bg-red-950/30 hover:border-red-500/50 shadow-[0_0_15px_-5px_rgba(220,38,38,0.2)]' : ''}
+                   ${diff === 'VERY HARD' ? 'bg-zinc-950 text-red-500 border-red-900/20 hover:bg-red-950/30 hover:border-red-500/50 shadow-[0_0_15px_-5px_rgba(220,38,38,0.2)]' : ''}
                  `}
                >
                  <span>{diff}</span>
-                 {diff === 'IMPOSSIBLE' && <span className="text-xs px-2 py-0.5 rounded bg-red-900/50 text-red-200">AI</span>}
+                 {diff === 'VERY HARD' && <span className="text-xs px-2 py-0.5 rounded bg-red-900/50 text-red-200">AI</span>}
                </button>
              ))}
           </div>

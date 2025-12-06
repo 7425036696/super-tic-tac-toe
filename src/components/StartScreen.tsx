@@ -53,7 +53,7 @@ const StartScreen: React.FC<StartScreenProps> = ({ onStart }) => {
 
           <div className="space-y-3">
              <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">Play vs Bot</p>
-             {(['EASY', 'MEDIUM', 'HARD', 'VERY HARD'] as any[]).map((diff) => {
+             {(['EASY', 'MEDIUM', 'HARD', 'VERY HARD'] as any[]).map((diff) => (
                <button
                  key={diff}
                  onClick={() => onStart('BOT', diff)}

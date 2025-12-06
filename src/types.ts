@@ -4,7 +4,7 @@ export type CellValue = Player | null;
 // 'D' stands for Draw (board full but no winner)
 export type BoardWinner = Player | 'D' | null; 
 
-export type Difficulty = 'EASY' | 'MEDIUM' | 'HARD' | 'IMPOSSIBLE';
+export type Difficulty = 'EASY' | 'MEDIUM' | 'HARD' | 'VERY HARD';
 export type Opponent = 'HUMAN' | 'BOT';
 
 export interface GameState {

@@ -238,6 +238,17 @@ const minimax = (state: GameState, depth: number, alpha: number, beta: number, i
                    .map(({boardIndex, cellIndex}) => ({boardIndex, cellIndex}))
             : moves;
 
+        for (const move of sortedMoves) {
+            const nextState = simulateMove(state, move, opponent);
+            const evalScore = minimax(nextState, depth - 1, alpha, beta, true, player);
+            minEval = Math.min(minEval, evalScore);
+            beta = Math.min(beta, evalScore);
+            if (beta <= alpha) break;
+        }
+        return minEval;
+    }
+};
+
 const getImpossibleMove = (gameState: GameState, moves: Move[], player: Player): Move => {
     // If first move, center is best.
     const isFirstMove = gameState.boards.flat().every(c => c === null);
@@ -271,17 +282,6 @@ const getImpossibleMove = (gameState: GameState, moves: Move[], player: Player):
         }
     }
     return bestMove;
-};      const simState = simulateMove(gameState, move, player);
-        // If immediate win, take it
-        if (simState.winner === player) return move;
-
-        const score = minimax(simState, MAX_DEPTH - 1, -INF, INF, false, player);
-        if (score > bestScore) {
-            bestScore = score;
-            bestMove = move;
-        }
-    }
-    return bestMove;
 };
 
 // --- MAIN BOT FUNCTION ---
@@ -299,7 +299,7 @@ export const getBotMove = (gameState: GameState, difficulty: Difficulty): Move =
       return getMediumMove(gameState, moves, player);
     case 'HARD':
       return getHardMove(gameState, moves, player);
-    case 'IMPOSSIBLE':
+    case 'VERY HARD':
       return getImpossibleMove(gameState, moves, player);
     default:
       return getRandomMove(moves);
